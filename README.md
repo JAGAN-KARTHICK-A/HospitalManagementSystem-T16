@@ -130,7 +130,47 @@ This project is a modular Hospital Management System built with Python (Flask) a
 ---
 
 ## 📁 Project Structure
-/hospital-management-system/ |-- /app/ | |-- /er_legal/ # Blueprint definition only | | |-- init.py | | | |-- /patient_portal/ # Patient blueprint | | |-- /templates/ # Patient HTML (assistant, summary, ai_features) | | |-- init.py | | |-- routes.py # Patient routes + Blockchain APIs | | | |-- /static/ # Shared static files (minimal) | | | |-- /templates/ # Staff HTML (main blueprint) | | |-- base.html, login.html, dashboard.html, _sidebar_nav.html | | |-- registration.html, manage_doctors.html, edit_doctor.html, ... | | |-- er_dashboard.html, er_case_detail.html, ... | | |-- mlc_add_log.html, mlc_view_log.html, mlc_view_all_logs.html, ... | | | |-- init.py # App factory | |-- db.py | |-- models.py # All DB functions | |-- routes.py # Staff routes (main blueprint) + ER/Legal routes | |-- utils.py | |-- ai_stubs.py # Gemini API functions | |-- /uploads/ # Complaint attachments |-- venv/ |-- config.py |-- run.py |-- requirements.txt |-- README.md # This file |-- .env # Secrets (DO NOT COMMIT) |-- .gitignore
+/hospital-management-system/
+|
+|-- /app/                     # Main application package
+|   |-- /er_legal/            # (Empty - Blueprint definition only now)
+|   |   |-- __init__.py       # Defines er_bp blueprint
+|   |
+|   |-- /patient_portal/      # Patient-facing blueprint
+|   |   |-- /templates/       # Patient HTML files (assistant, summary, ai_features)
+|   |   |-- __init__.py       # Defines patient_bp blueprint
+|   |   |-- routes.py         # Patient chat, summary, blockchain APIs
+|   |
+|   |-- /static/              # Shared static files (minimal)
+|   |   |-- /css/
+|   |
+|   |-- /templates/           # Staff-facing HTML files (main blueprint)
+|   |   |-- base.html, login.html, dashboard.html, _sidebar_nav.html
+|   |   |-- registration.html, manage_doctors.html, edit_doctor.html, ...
+|   |   |-- pharmacy.html, pharmacy_stock.html, billing_log.html, ...
+|   |   |-- lab_sample_collection.html, lab_workbench.html, ...
+|   |   |-- consultation_room.html, consultation_log.html, ...
+|   |   |-- manage_formulary.html, manage_lab_tests.html, ...
+|   |   |-- patient_list.html, vitals_logging.html, vitals_patient.html, ...
+|   |   |-- complaints.html, complaint_detail.html, ...
+|   |   |-- er_dashboard.html, er_case_detail.html, ...
+|   |   |-- mlc_add_log.html, mlc_view_log.html, mlc_view_all_logs.html, ...
+|   |
+|   |-- __init__.py           # Application factory (create_app)
+|   |-- db.py                 # MongoDB connection setup
+|   |-- models.py             # All DB functions
+|   |-- routes.py             # Staff portal routes (main blueprint) + ER/Legal routes
+|   |-- utils.py              # Utility functions (e.g., role decorator)
+|   |-- ai_stubs.py           # Gemini API functions
+|
+|-- /uploads/                 # Folder for file uploads (e.g., complaint attachments)
+|-- venv/                     # Virtual environment folder
+|-- config.py                 # Configuration classes
+|-- run.py                    # Entry point to run the app
+|-- requirements.txt          # Python dependencies
+|-- README.md                 # Project README file
+|-- .env                      # Environment variables (SECRET!)
+|-- .gitignore                # Git ignore patterns
 ---
 
 ## 🤖 AI Integration
