@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - SRM Hospital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <style>
+        /* SRM Blue & Darker variant */
+        :root {
+            --srm-blue: #007a9e;
+            --srm-blue-dark: #005a74;
+        }
+        .bg-srm-blue { background-color: var(--srm-blue); }
+        .text-srm-blue { color: var(--srm-blue); }
+        .border-srm-blue { border-color: var(--srm-blue); }
+        .hover\:bg-srm-blue-dark:hover { background-color: var(--srm-blue-dark); }
+        .hover\:border-srm-blue:hover { border-color: var(--srm-blue); }
+        .ring-srm-blue { --tw-ring-color: var(--srm-blue); }
+
+        /* Subtle background */
+        body {
+            background-color: #f8fafc; /* Tailwind gray-50 */
+        }
+
+        /* Card styles */
+        .feature-card {
+            background-color: white;
+            border-radius: 0.75rem; /* rounded-xl */
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); /* shadow-md */
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            overflow: hidden; /* Ensure consistency */
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.04); /* shadow-lg */
+            border-color: var(--srm-blue);
+        }
+        .feature-card.coming-soon {
+            opacity: 0.7;
+            /* background-color: #f9fafb; */ /* Slightly different bg for upcoming */
+        }
+         .feature-card.coming-soon:hover {
+             transform: none; /* Disable hover lift for upcoming */
+             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+             border-color: #e5e7eb; /* Keep border gray */
+         }
+
+        .feature-icon-wrapper {
+            width: 4rem; /* w-16 */
+            height: 4rem; /* h-16 */
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem; /* mb-4 */
+        }
+        .feature-icon-wrapper ion-icon {
+            font-size: 2rem; /* text-4xl */
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem; /* px-3 py-1 */
+            border-radius: 9999px; /* rounded-full */
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 600; /* font-semibold */
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body class="p-6 md:p-12">
+
+    <div class="max-w-3xl mx-auto">
+        <header class="mb-10 text-center">
+            <div class="inline-block p-3 bg-srm-blue text-white rounded-full mb-4 shadow-lg">
+                <ion-icon name="sparkles" class="text-3xl"></ion-icon>
+             </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">AI Health Assistant Tools</h1>
+            <p class="text-lg text-gray-600">Leveraging technology to support your health journey.</p>
+             <a href="{{ url_for('patient_portal.assistant_home') }}" class="mt-4 inline-flex items-center text-sm text-srm-blue hover:underline">
+                 <ion-icon name="arrow-back-outline" class="mr-1"></ion-icon>
+                 Back to AI Assistant Chat
+             </a>
+        </header>
+
+        <section class="space-y-8">
+
+            <div class="feature-card">
+                 <a href="{{ url_for('patient_portal.assistant_home') }}" class="block p-6 md:p-8">
+                    <div class="feature-icon-wrapper bg-srm-blue">
+                        <ion-icon name="chatbubbles-outline"></ion-icon>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-xl font-semibold text-gray-900">AI Patient Assistant</h2>
+                        <span class="status-badge bg-green-100 text-green-800">Available Now</span>
+                    </div>
+                    <p class="text-gray-700 mb-4 leading-relaxed">
+                        Get instant help with non-emergency symptom analysis, ask questions about hospital services, book appointments, log feedback, view bills, and check lab results securely using your name and phone number. Our AI is here to guide you 24/7.
+                    </p>
+                    <span class="font-semibold text-srm-blue group inline-flex items-center">
+                        Launch Assistant
+                        <ion-icon name="arrow-forward-outline" class="ml-1 group-hover:translate-x-1 transition-transform"></ion-icon>
+                    </span>
+                </a>
+            </div>
+
+            <div class="feature-card coming-soon">
+                 <div class="p-6 md:p-8">
+                    <div class="feature-icon-wrapper bg-purple-600">
+                        <ion-icon name="analytics-outline"></ion-icon>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-xl font-semibold text-gray-900">Personalized Health Insights</h2>
+                         <span class="status-badge bg-purple-100 text-purple-800">Coming Soon</span>
+                    </div>
+                    <p class="text-gray-700 mb-4 leading-relaxed">
+                        Understand your health better. Soon, our AI will help analyze trends in your vitals (if available) and provide personalized insights regarding potential risks for common conditions, along with lifestyle suggestions.
+                    </p>
+                    <span class="font-semibold text-gray-500">Feature Under Development</span>
+                 </div>
+            </div>
+
+            <div class="feature-card coming-soon">
+                 <div class="p-6 md:p-8">
+                    <div class="feature-icon-wrapper bg-teal-600">
+                        <ion-icon name="scan-outline"></ion-icon>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                         <h2 class="text-xl font-semibold text-gray-900">Medical Image Insights</h2>
+                         <span class="status-badge bg-teal-100 text-teal-800">Experimental</span>
+                    </div>
+                    <p class="text-gray-700 mb-4 leading-relaxed">
+                        We are exploring AI tools for preliminary analysis of certain medical images (e.g., skin conditions). This future feature will offer informational insights only and **will not provide a diagnosis**. Requires doctor validation.
+                    </p>
+                    <span class="font-semibold text-gray-500">Feature Under Development</span>
+                 </div>
+            </div>
+
+        </section>
+
+        <footer class="mt-12 pt-8 border-t border-gray-200 text-center">
+            <p class="text-sm text-red-700 mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                <ion-icon name="warning" class="inline-block align-middle text-lg mr-1"></ion-icon>
+                <strong>Important Medical Disclaimer:</strong> AI tools provide supplementary information and are not a substitute for professional medical advice, diagnosis, or treatment from a qualified healthcare provider. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition. Never disregard professional medical advice or delay in seeking it because of something you have read or interpreted from these tools. If you think you may have a medical emergency, call your local emergency number or go to the nearest emergency room immediately.
+            </p>
+            <p class="text-sm text-gray-500">
+                Powered by SRM Group of Institutions, Tiruchirappalli
+            </p>
+         </footer>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <!-- Search Form -->
+    <div class="bg-white shadow-lg rounded-lg border-l-4 border-blue-500 p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">View Medico-Legal Case Log (Blockchain)</h2>
+        <form id="search-log-form" class="flex items-end space-x-3">
+            <div class="flex-grow">
+                <label for="searchCaseId" class="block text-sm font-medium text-gray-700 mb-1">Enter Case ID</label>
+                <input type="text" id="searchCaseId" name="searchCaseId"
+                       placeholder="e.g., MLC2025-001"
+                       value="{{ case_id_query }}" {# Pre-fill if passed via URL #}
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       required>
+            </div>
+            <button type="submit"
+                    id="search-button"
+                    class="bg-blue-600 text-white font-medium py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 transition duration-300 disabled:opacity-50">
+                Search Logs
+            </button>
+        </form>
+        <div id="search-feedback" class="mt-3 text-sm"></div>
+    </div>
+
+    <!-- Results Area -->
+    <div id="results-area" class="hidden bg-white shadow-md rounded-lg">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Blockchain Log for Case ID: <span id="result-case-id" class="font-bold"></span></h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Logged By (Address)</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Log ID</th>
+                    </tr>
+                </thead>
+                <tbody id="results-tbody" class="bg-white divide-y divide-gray-200">
+                    <!-- Log entries will be inserted here -->
+                </tbody>
+            </table>
+            <p id="no-results-message" class="hidden p-6 text-gray-500">No blockchain logs found for this Case ID.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const searchForm = document.getElementById('search-log-form');
+    const searchButton = document.getElementById('search-button');
+    const searchFeedback = document.getElementById('search-feedback');
+    const resultsArea = document.getElementById('results-area');
+    const resultCaseIdSpan = document.getElementById('result-case-id');
+    const resultsTbody = document.getElementById('results-tbody');
+    const noResultsMessage = document.getElementById('no-results-message');
+    const caseIdInput = document.getElementById('searchCaseId'); // Get input field
+
+    async function fetchLogs(caseId) {
+        searchFeedback.textContent = 'Fetching logs from blockchain...';
+        searchFeedback.className = 'mt-3 text-sm text-blue-600';
+        searchButton.disabled = true;
+        resultsArea.classList.add('hidden'); // Hide previous results
+        resultsTbody.innerHTML = ''; // Clear table body
+        noResultsMessage.classList.add('hidden');
+
+        try {
+            // NOTE: Using patient_portal endpoint
+            const response = await fetch(`/patient/get_logs/${encodeURIComponent(caseId)}`, {
+                method: 'GET',
+                headers: {
+                    // Add auth headers if needed
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                searchFeedback.textContent = `Found ${result.logs.length} log(s).`;
+                searchFeedback.classList.remove('text-blue-600');
+                searchFeedback.classList.add('text-green-700');
+                resultCaseIdSpan.textContent = result.caseId;
+                resultsArea.classList.remove('hidden');
+
+                if (result.logs.length > 0) {
+                    result.logs.forEach(log => {
+                        const row = resultsTbody.insertRow();
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${log.timestamp}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">${log.eventDetails}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">${log.loggedBy}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.logId}</td>
+                        `;
+                    });
+                } else {
+                    noResultsMessage.classList.remove('hidden');
+                }
+
+            } else {
+                throw new Error(result.message || `HTTP error ${response.status}`);
+            }
+
+        } catch (error) {
+            console.error('Error fetching logs:', error);
+            searchFeedback.textContent = `Error: ${error.message}`;
+            searchFeedback.classList.remove('text-blue-600', 'text-green-700');
+            searchFeedback.classList.add('text-red-600', 'font-medium');
+        } finally {
+            searchButton.disabled = false;
+        }
+    }
+
+    searchForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const caseId = caseIdInput.value.trim();
+        if (caseId) {
+            fetchLogs(caseId);
+        } else {
+             searchFeedback.textContent = 'Please enter a Case ID.';
+             searchFeedback.className = 'mt-3 text-sm text-red-600 font-medium';
+        }
+    });
+
+    // Automatically fetch if case ID is pre-filled from URL query parameter
+    if (caseIdInput.value) {
+        fetchLogs(caseIdInput.value);
+    }
+
+</script>
+{% endblock %}

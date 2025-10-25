@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left Column: Case Summary & Details -->
+    <div class="lg:col-span-1 space-y-6">
+        <!-- Patient/Triage Info -->
+        <div class="bg-white shadow-lg rounded-lg border-l-4 border-red-500">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">{{ er_case.patient_name }}</h2>
+                        <p class="text-sm text-gray-600">{{ er_case.pid }}</p>
+                    </div>
+                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full
+                        {% if er_case.triage_score == 1 %} bg-red-600 text-white
+                        {% elif er_case.triage_score == 2 %} bg-red-500 text-white
+                        {% elif er_case.triage_score == 3 %} bg-yellow-500 text-black
+                        {% elif er_case.triage_score == 4 %} bg-blue-500 text-white
+                        {% else %} bg-green-500 text-white {% endif %}">
+                        LEVEL {{ er_case.triage_score }}
+                    </span>
+                </div>
+                <hr class="my-4">
+                <h3 class="text-sm font-semibold text-gray-700">Registration ({{ er_case.registered_at.strftime('%Y-%m-%d %H:%M') }} by {{ er_case.registered_by_name }})</h3>
+                <p class="text-sm text-gray-600"><strong>Symptoms:</strong> {{ er_case.presenting_symptoms }}</p>
+                <p class="text-sm text-gray-600"><strong>Pre-Hospital:</strong> {{ er_case.pre_hospital_info or 'N/A' }}</p>
+                <div class="mt-2 text-sm text-gray-800">
+                    <strong>Vitals:</strong> BP: {{ er_case.initial_vitals.bp_systolic }}/{{ er_case.initial_vitals.bp_diastolic }} |
+                    HR: {{ er_case.initial_vitals.heart_rate }} |
+                    Temp: {{ er_case.initial_vitals.temperature }}°F
+                </div>
+                {% if er_case.disposition %}
+                <hr class="my-4">
+                <h3 class="text-sm font-semibold text-gray-700">Disposition ({{ er_case.disposition.decided_at.strftime('%H:%M') }} by {{ er_case.disposition.decided_by }})</h3>
+                <p class="text-sm font-bold text-gray-800">Decision: {{ er_case.disposition.decision }}</p>
+                <p class="text-sm text-gray-600">Notes: {{ er_case.disposition.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Update Details Form -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Update Case Details</h2>
+            <form method="POST" action="{{ url_for('main.er_case_detail', case_id=er_case._id) }}" class="space-y-4">
+                <input type="hidden" name="action" value="update_details">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Current Status</label>
+                    <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        {% for stat in er_statuses %}
+                        <option value="{{ stat }}" {% if er_case.status == stat %}selected{% endif %}>{{ stat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700">Current Location</label>
+                    <input type="text" name="current_location" value="{{ er_case.current_location }}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700">Assign Doctor</label>
+                    <select name="assigned_doctor_id" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="">-- Select Doctor --</option>
+                        {% for doc in doctors %}
+                        <option value="{{ doc._id }}" {% if er_case.assigned_doctor_id == doc._id %}selected{% endif %}>{{ doc.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-sky-600 text-white font-medium py-2 px-4 rounded-md">Update Details</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Middle Column: Notes & Orders -->
+    <div class="lg:col-span-1 bg-white shadow-lg rounded-lg">
+        <!-- Add Note -->
+        <div class="p-6 border-b">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Add Case Note</h2>
+            <form method="POST" action="{{ url_for('main.er_case_detail', case_id=er_case._id) }}">
+                <input type="hidden" name="action" value="add_note">
+                <textarea name="note_text" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter clinical note..." required></textarea>
+                <button type="submit" class="mt-2 w-full bg-gray-600 text-white font-medium py-2 px-4 rounded-md">Add Note</button>
+            </form>
+        </div>
+        <!-- Notes History -->
+        <div class="p-6 max-h-60 overflow-y-auto space-y-3">
+             <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes History</h3>
+            {% if er_case.case_notes %}
+                {% for note in er_case.case_notes | reverse %}
+                <div class="text-sm p-2 bg-gray-50 rounded border">
+                    <p class="text-gray-800">{{ note.note_text }}</p>
+                    <p class="text-xs text-gray-500 text-right">- {{ note.noted_by }} at {{ note.noted_at.strftime('%H:%M') }}</p>
+                </div>
+                {% endfor %}
+            {% else %} <p class="text-sm text-gray-500">No notes yet.</p> {% endif %}
+        </div>
+        <hr>
+        <!-- Add Order -->
+         <div class="p-6 border-b">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Add Treatment Order</h2>
+            <form method="POST" action="{{ url_for('main.er_case_detail', case_id=er_case._id) }}">
+                <input type="hidden" name="action" value="add_order">
+                <textarea name="order_text" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., STAT CBC, IV Fluids 1L Normal Saline..." required></textarea>
+                <button type="submit" class="mt-2 w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-md">Add Order</button>
+            </form>
+        </div>
+        <!-- Orders History -->
+        <div class="p-6 max-h-60 overflow-y-auto space-y-3">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Orders History</h3>
+            {% if er_case.treatment_orders %}
+                {% for order in er_case.treatment_orders | reverse %}
+                <div class="text-sm p-2 bg-blue-50 rounded border">
+                    <p class="text-gray-800">{{ order.order_text }} ({{ order.status }})</p>
+                    <p class="text-xs text-gray-500 text-right">- {{ order.ordered_by }} at {{ order.ordered_at.strftime('%H:%M') }}</p>
+                </div>
+                 {% endfor %}
+            {% else %} <p class="text-sm text-gray-500">No orders yet.</p> {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Disposition -->
+    <div class="lg:col-span-1 bg-white shadow-lg rounded-lg">
+        <div class="p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Set Disposition</h2>
+            {% if not er_case.disposition %}
+            <form method="POST" action="{{ url_for('main.er_case_detail', case_id=er_case._id) }}" class="space-y-4">
+                 <input type="hidden" name="action" value="set_disposition">
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700">Decision *</label>
+                    <select name="disposition_decision" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                        <option value="">-- Select Decision --</option>
+                        {% for dec in disposition_decisions %}
+                        <option value="{{ dec }}">{{ dec }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea name="disposition_notes" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., Admit to Cardiology under Dr. Reed, Discharge with follow-up instructions..."></textarea>
+                </div>
+                 <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">
+                    Finalize Disposition
+                </button>
+            </form>
+            {% else %}
+             <div class="p-4 bg-gray-100 rounded-lg">
+                <h3 class="text-sm font-semibold text-gray-700">Disposition Set ({{ er_case.disposition.decided_at.strftime('%Y-%m-%d %H:%M') }} by {{ er_case.disposition.decided_by }})</h3>
+                <p class="text-lg font-bold text-gray-800">{{ er_case.disposition.decision }}</p>
+                <p class="text-sm text-gray-600">Notes: {{ er_case.disposition.notes }}</p>
+             </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

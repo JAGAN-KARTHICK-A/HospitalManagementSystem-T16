@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - SRM Hospital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <style>
+        .bg-srm-blue { background-color: #007a9e; }
+        .text-srm-blue { color: #007a9e; }
+        .hover\:bg-srm-blue-dark:hover { background-color: #005a74; }
+        body { background-color: #f8fafc; /* gray-50 */ }
+        th { background-color: #f3f4f6; /* gray-100 */ }
+        .ring-srm-blue { --tw-ring-color: #007a9e; } /* For focus rings */
+    </style>
+</head>
+<body class="p-6 md:p-10 font-sans">
+
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+
+        {% if identified and summary %}
+        <div class="flex flex-col sm:flex-row justify-between items-start mb-8 pb-4 border-b">
+             <div>
+                <h1 class="text-2xl font-bold text-gray-800">Insurance Activity Summary</h1>
+                <p class="text-gray-600">For: <span class="font-semibold">{{ summary.patient.patient_name }}</span> ({{ summary.patient.pid }})</p>
+                <p class="text-sm text-gray-500">Generated on: {{ datetime.utcnow().strftime('%B %d, %Y') }}</p>
+            </div>
+            <div class="mt-4 sm:mt-0 flex flex-col sm:items-end space-y-2">
+                 <a href="{{ url_for('patient_portal.download_insurance_summary_pdf') }}"
+                   class="inline-flex items-center px-4 py-2 bg-srm-blue text-white font-medium rounded-md shadow-sm hover:bg-srm-blue-dark transition duration-150">
+                    <ion-icon name="download-outline" class="mr-2 text-lg"></ion-icon>
+                    Download PDF Summary
+                </a>
+                 <a href="{{ url_for('patient_portal.assistant_home') }}" class="text-sm text-srm-blue hover:underline">
+                     &larr; Back to Assistant
+                 </a>
+            </div>
+        </div>
+
+        <div class="space-y-8">
+            <section> <h2 class="text-xl font-semibold text-gray-700 mb-3 border-b pb-1">Consultations</h2> {% if summary.consultations %} <div class="overflow-x-auto"> <table class="min-w-full divide-y divide-gray-200 text-sm"> <thead><tr><th class="px-4 py-2 text-left">Date</th><th class="px-4 py-2 text-left">Doctor</th><th class="px-4 py-2 text-left">Assessment/Reason</th></tr></thead> <tbody class="divide-y divide-gray-100"> {% for consult in summary.consultations %} <tr> <td class="px-4 py-2 whitespace-nowrap">{{ consult.consultation_at.strftime('%Y-%m-%d') }}</td> <td class="px-4 py-2">{{ consult.doctor_name }}</td> <td class="px-4 py-2">{{ consult.notes.get('assessment', 'N/A') if consult.notes is mapping else 'N/A' }}</td> </tr> {% endfor %} </tbody> </table> </div> {% else %} <p class="text-gray-500 text-sm">No consultation history found.</p> {% endif %} </section>
+            <section> <h2 class="text-xl font-semibold text-gray-700 mb-3 border-b pb-1">Dispensed Medications</h2> {% if summary.dispensed_meds %} <div class="overflow-x-auto"> <table class="min-w-full divide-y divide-gray-200 text-sm"> <thead><tr><th class="px-4 py-2 text-left">Dispensed Date</th><th class="px-4 py-2 text-left">Medication</th><th class="px-4 py-2 text-left">Dosage</th><th class="px-4 py-2 text-left">Prescribing Doctor</th></tr></thead> <tbody class="divide-y divide-gray-100"> {% for med in summary.dispensed_meds %} <tr> <td class="px-4 py-2 whitespace-nowrap">{{ med.dispensed_at.strftime('%Y-%m-%d') if med.dispensed_at else 'N/A' }}</td> <td class="px-4 py-2">{{ med.drug_name|title }}</td> <td class="px-4 py-2">{{ med.dosage }}</td> <td class="px-4 py-2">{{ med.doctor }}</td> </tr> {% endfor %} </tbody> </table> </div> {% else %} <p class="text-gray-500 text-sm">No dispensed medication history found.</p> {% endif %} </section>
+            <section> <h2 class="text-xl font-semibold text-gray-700 mb-3 border-b pb-1">Completed Lab Tests</h2> {% if summary.completed_labs %} <div class="overflow-x-auto"> <table class="min-w-full divide-y divide-gray-200 text-sm"> <thead><tr><th class="px-4 py-2 text-left">Result Date</th><th class="px-4 py-2 text-left">Test Name</th><th class="px-4 py-2 text-left">Result</th><th class="px-4 py-2 text-left">Ordering Doctor</th></tr></thead> <tbody class="divide-y divide-gray-100"> {% for lab in summary.completed_labs %} <tr> <td class="px-4 py-2 whitespace-nowrap">{{ lab.verified_at.strftime('%Y-%m-%d') if lab.verified_at else 'N/A' }}</td> <td class="px-4 py-2">{{ lab.test_name|title }}</td> <td class="px-4 py-2">{{ lab.result }}</td> <td class="px-4 py-2">{{ lab.doctor }}</td> </tr> {% endfor %} </tbody> </table> </div> {% else %} <p class="text-gray-500 text-sm">No completed lab test history found.</p> {% endif %} </section>
+             <section> <h2 class="text-xl font-semibold text-gray-700 mb-3 border-b pb-1">Paid Billing Items</h2> {% if summary.paid_bills %} <div class="overflow-x-auto"> <table class="min-w-full divide-y divide-gray-200 text-sm"> <thead><tr><th class="px-4 py-2 text-left">Date</th><th class="px-4 py-2 text-left">Description</th><th class="px-4 py-2 text-right">Amount (₹)</th></tr></thead> <tbody class="divide-y divide-gray-100"> {% for bill in summary.paid_bills %} <tr> <td class="px-4 py-2 whitespace-nowrap">{{ bill.created_at.strftime('%Y-%m-%d') }}</td> <td class="px-4 py-2">{{ bill.item_description }}</td> <td class="px-4 py-2 text-right">₹{{ "%.2f"|format(bill.total_amount) }}</td> </tr> {% endfor %} <tr class="font-semibold bg-gray-50"><td class="px-4 py-2 text-right" colspan="2">Total Paid</td><td class="px-4 py-2 text-right">₹{{ "%.2f"|format(summary.paid_bills | sum(attribute='total_amount')) }}</td></tr> </tbody> </table> </div> {% else %} <p class="text-gray-500 text-sm">No paid billing history found.</p> {% endif %} </section>
+        </div>
+         <footer class="mt-10 pt-6 border-t border-gray-200 text-center"> <p class="text-xs text-gray-500"> This summary is generated based on available electronic records... </p> <p class="text-sm text-gray-600 font-medium mt-2"> SRM Group of Institutions, Tiruchirappalli </p> </footer>
+
+        {% else %}
+        <div class="text-center py-10">
+             <div class="inline-block p-4 bg-yellow-100 text-yellow-700 rounded-full mb-5">
+                <ion-icon name="keypad-outline" class="text-4xl"></ion-icon> {# Changed icon #}
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-3">Identify Yourself</h1>
+            <p class="text-gray-600 mb-6">
+                To view your personalized Insurance Activity Summary, please enter the phone number associated with your hospital record.
+            </p>
+
+            {% if error_message %}
+                <div class="mb-4 p-3 bg-red-100 text-red-700 border border-red-200 rounded-md text-sm">
+                    {{ error_message }}
+                </div>
+            {% endif %}
+             {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="mb-4 p-3 rounded-md text-sm {% if category == 'danger' %} bg-red-100 text-red-700 border border-red-200 {% elif category == 'success' %} bg-green-100 text-green-700 border border-green-200 {% else %} bg-blue-100 text-blue-700 border border-blue-200 {% endif %}" role="alert">
+                       {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+
+            <form method="POST" action="{{ url_for('patient_portal.insurance_summary_page') }}" class="max-w-sm mx-auto">
+                <label for="phone_number" class="sr-only">Phone Number</label>
+                <input type="tel" id="phone_number" name="phone_number"
+                       class="w-full px-5 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-srm-blue focus:border-transparent text-center text-lg mb-4"
+                       placeholder="Enter your 10-digit phone number"
+                       required pattern="[0-9]{10}"> {# Basic 10-digit pattern #}
+
+                <button type="submit"
+                   class="w-full inline-flex items-center justify-center px-6 py-3 bg-srm-blue text-white font-medium rounded-md shadow-sm hover:bg-srm-blue-dark transition duration-150 text-base">
+                    <ion-icon name="search-outline" class="mr-2 text-xl"></ion-icon>
+                    Find My Summary
+                </button>
+            </form>
+
+            <p class="text-sm text-gray-500 mt-6">
+                Alternatively, you can use the <a href="{{ url_for('patient_portal.assistant_home') }}" class="text-srm-blue hover:underline">AI Patient Assistant</a>.
+            </p>
+        </div>
+         <footer class="mt-10 pt-6 border-t border-gray-200 text-center">
+             <p class="text-sm text-gray-600 font-medium mt-2">
+                 SRM Group of Institutions, Tiruchirappalli
+             </p>
+         </footer>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>

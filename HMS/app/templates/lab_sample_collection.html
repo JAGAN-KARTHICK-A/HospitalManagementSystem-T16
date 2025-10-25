@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg">
+    <div class="p-6 border-b border-gray-200">
+         <h2 class="text-xl font-bold text-gray-800">
+            Sample Collection Queue ({{ queue|length }})
+         </h2>
+    </div>
+    
+    <div class="overflow-x-auto">
+        {% if queue %}
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Test Ordered</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doctor</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for order in queue %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ order.patient.patient_name }}</div>
+                                <div class="text-sm text-gray-600">{{ order.patient.pid }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">{{ order.investigation_orders.name }}</div>
+                                <div class="text-sm text-gray-500">{{ order.investigation_orders.notes or 'No notes' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                {{ order.doctor_name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{{ url_for('main.lab_collect_sample', consultation_id=order._id, order_id=order.investigation_orders._id) }}"
+                                   class="text-green-600 hover:text-green-900">
+                                    Mark as Collected
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="p-6 text-gray-500">No samples pending collection.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

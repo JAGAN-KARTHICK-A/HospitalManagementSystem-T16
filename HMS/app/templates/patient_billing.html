@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white shadow-lg rounded-lg border-l-4 border-sky-500 p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Find Patient Bill</h2>
+            <form method="GET" action="{{ url_for('main.patient_billing') }}" class="flex space-x-2">
+                <input type="text" id="search_query" name="search_query"
+                       placeholder="Search by PID or Name..."
+                       value="{{ request.args.get('search_query', '') }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                       required>
+                <button type="submit"
+                        class="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-700 transition duration-300">
+                    Search
+                </button>
+            </form>
+
+            {% if patients %}
+            <div class="mt-4 border-t border-gray-200 pt-4 max-h-60 overflow-y-auto">
+                <h3 class="text-sm font-medium text-gray-500 mb-2">Search Results:</h3>
+                <ul class="divide-y divide-gray-100">
+                    {% for p in patients %}
+                    <li class="flex justify-between items-center py-2">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ p.patient_name }}</p>
+                            <p class="text-sm text-gray-500">{{ p.pid }}</p>
+                        </div>
+                        <a href="{{ url_for('main.patient_billing', select_patient_id=p._id) }}"
+                           class="text-sm font-medium text-sky-600 hover:text-sky-800">
+                            Select
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="lg:col-span-2 bg-white shadow-md rounded-lg">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800">
+                {% if selected_patient %}
+                    Unpaid Bill for {{ selected_patient.patient_name }} ({{ selected_patient.pid }})
+                {% else %}
+                    Patient Bill
+                {% endif %}
+             </h2>
+        </div>
+
+        {% if selected_patient %}
+            <div class="overflow-x-auto">
+                {% if unpaid_bills %}
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for item in unpaid_bills %}
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ item.created_at.strftime('%Y-%m-%d') }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm text-gray-900">{{ item.item_description }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700">{{ item.quantity }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700">₹{{ "%.2f"|format(item.unit_price) }}</td> <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">₹{{ "%.2f"|format(item.total_amount) }}</td> </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-gray-100">
+                            <tr>
+                                <td colspan="4" class="px-6 py-3 text-right text-sm font-bold text-gray-900 uppercase">Total Due</td>
+                                <td class="px-6 py-3 text-right text-sm font-bold text-gray-900">₹{{ "%.2f"|format(total_due) }}</td> </tr>
+                        </tfoot>
+                    </table>
+                    <div class="p-6 text-right">
+                        <a href="{{ url_for('main.mark_patient_bill_paid', patient_id=selected_patient._id) }}"
+                           class="bg-green-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-green-700">
+                            Mark Entire Bill as Paid
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="p-6 text-gray-500">No unpaid bills found for this patient.</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <p class="p-6 text-gray-500">Please search for and select a patient to view their bill.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

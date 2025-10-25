@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-1 bg-white shadow-lg rounded-lg border-l-4 border-sky-500">
+        <form method="POST" action="{{ url_for('main.vitals_patient', pid=patient.pid) }}" class="p-6 space-y-4">
+            <h2 class="text-xl font-bold text-gray-800">Log Vitals</h2>
+            <div class="mb-2">
+                <p class="text-lg font-medium text-gray-900">{{ patient.patient_name }}</p>
+                <p class="text-sm text-gray-600">{{ patient.pid }} | {{ patient.patient_contact }}</p>
+            </div>
+            
+            <label class="block text-sm font-medium text-gray-700 mb-1">Blood Pressure (mmHg)</label>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <input type="number" name="bp_systolic" placeholder="Systolic (e.g., 120)"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                           required>
+                </div>
+                 <div>
+                    <input type="number" name="bp_diastolic" placeholder="Diastolic (e.g., 80)"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                           required>
+                </div>
+            </div>
+
+            <div>
+                <label for="heart_rate" class="block text-sm font-medium text-gray-700 mb-1">Heart Rate (bpm)</label>
+                <input type="number" id="heart_rate" name="heart_rate" placeholder="e.g., 70"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                       required>
+            </div>
+            
+            <div>
+                <label for="temperature" class="block text-sm font-medium text-gray-700 mb-1">Temperature (°F)</label>
+                <input type="number" step="0.1" id="temperature" name="temperature" placeholder="e.g., 98.6"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                       required>
+            </div>
+
+            <div class="pt-2">
+                <button type="submit" 
+                        class="w-full bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-700 transition duration-300">
+                    Save Vitals
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="lg:col-span-2 bg-white shadow-md rounded-lg">
+        <div class="p-6 border-b border-gray-200">
+             <h2 class="text-xl font-bold text-gray-800">
+                Vitals History
+             </h2>
+        </div>
+        
+        <div class="overflow-x-auto">
+            {% if patient_vitals %}
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date / Time</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vitals</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alerts</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nurse</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for log in patient_vitals %}
+                            <tr class="{% if log.alerts %} bg-red-50 {% endif %}">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ log.logged_at.strftime('%Y-%m-%d') }}</div>
+                                    <div class="text-sm text-gray-500">{{ log.logged_at.strftime('%I:%M %p') }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">BP: <strong>{{ log.vitals.bp_systolic }}/{{ log.vitals.bp_diastolic }}</strong> mmHg</div>
+                                    <div class="text-sm text-gray-900">HR: <strong>{{ log.vitals.heart_rate }}</strong> bpm</div>
+                                    <div class="text-sm text-gray-900">Temp: <strong>{{ log.vitals.temperature }}</strong>°F</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if log.alerts %}
+                                        {% for alert in log.alerts %}
+                                            <span class="block px-2 py-1 text-xs font-semibold rounded-md bg-red-100 text-red-800 mb-1">
+                                                <ion-icon name="alert-circle-outline" class="inline-block"></ion-icon>
+                                                {{ alert }}
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Normal
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                    {{ log.nurse_name }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="p-6 text-gray-500">No vitals have been logged for this patient yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

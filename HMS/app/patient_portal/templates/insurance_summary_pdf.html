@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Insurance Summary - {{ summary.patient.patient_name }}</title>
+    <style>
+        body { font-family: sans-serif; font-size: 10pt; }
+        h1 { color: #005a74; font-size: 18pt; text-align: center; margin-bottom: 5px;}
+        h2 { color: #007a9e; font-size: 14pt; border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-top: 25px; margin-bottom: 10px;}
+        .header-info { text-align: center; margin-bottom: 20px; font-size: 9pt; color: #555; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 9pt; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; vertical-align: top;}
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .total-row td { font-weight: bold; background-color: #f2f2f2; }
+        .footer { text-align: center; font-size: 8pt; color: #777; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 10px;}
+        .no-data { color: #777; font-style: italic; }
+        /* Simple table column widths (adjust as needed) */
+        .col-date { width: 15%; }
+        .col-desc { width: 40%; }
+        .col-detail { width: 25%; }
+        .col-amount { width: 15%; text-align: right;}
+    </style>
+</head>
+<body>
+    <h1>SRM Hospital - Insurance Activity Summary</h1>
+    <div class="header-info">
+        Patient: <strong>{{ summary.patient.patient_name }}</strong> (ID: {{ summary.patient.pid }})<br>
+        Generated On: {{ datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC') }}
+    </div>
+
+    <h2>Consultations</h2>
+    {% if summary.consultations %}
+        <table>
+            <thead><tr><th class="col-date">Date</th><th>Doctor</th><th class="col-desc">Assessment/Reason</th></tr></thead>
+            <tbody>
+            {% for consult in summary.consultations %}
+                <tr>
+                    <td>{{ consult.consultation_at.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ consult.doctor_name }}</td>
+                    <td>{{ consult.notes.get('assessment', 'N/A') if consult.notes is mapping else 'N/A' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %} <p class="no-data">No consultation history.</p> {% endif %}
+
+    <h2>Dispensed Medications</h2>
+     {% if summary.dispensed_meds %}
+        <table>
+            <thead><tr><th class="col-date">Dispensed Date</th><th class="col-desc">Medication</th><th class="col-detail">Dosage</th><th>Prescribing Doctor</th></tr></thead>
+            <tbody>
+            {% for med in summary.dispensed_meds %}
+                <tr>
+                    <td>{{ med.dispensed_at.strftime('%Y-%m-%d') if med.dispensed_at else 'N/A' }}</td>
+                    <td>{{ med.drug_name|title }}</td>
+                    <td>{{ med.dosage }}</td>
+                    <td>{{ med.doctor }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %} <p class="no-data">No dispensed medication history.</p> {% endif %}
+
+    <h2>Completed Lab Tests</h2>
+     {% if summary.completed_labs %}
+        <table>
+            <thead><tr><th class="col-date">Result Date</th><th class="col-desc">Test Name</th><th class="col-detail">Result</th><th>Ordering Doctor</th></tr></thead>
+            <tbody>
+            {% for lab in summary.completed_labs %}
+                <tr>
+                    <td>{{ lab.verified_at.strftime('%Y-%m-%d') if lab.verified_at else 'N/A' }}</td>
+                    <td>{{ lab.test_name|title }}</td>
+                    <td>{{ lab.result }}</td>
+                    <td>{{ lab.doctor }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %} <p class="no-data">No completed lab test history.</p> {% endif %}
+
+     <h2>Paid Billing Items</h2>
+     {% if summary.paid_bills %}
+        <table>
+            <thead><tr><th class="col-date">Date</th><th class="col-desc">Description</th><th class="col-amount">Amount (₹)</th></tr></thead>
+            <tbody>
+            {% for bill in summary.paid_bills %}
+                <tr>
+                    <td>{{ bill.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ bill.item_description }}</td>
+                    <td class="col-amount">₹{{ "%.2f"|format(bill.total_amount) }}</td>
+                </tr>
+            {% endfor %}
+             <tr class="total-row"><td colspan="2" style="text-align: right;">Total Paid</td><td class="col-amount">₹{{ "%.2f"|format(summary.paid_bills | sum(attribute='total_amount')) }}</td></tr>
+            </tbody>
+        </table>
+    {% else %} <p class="no-data">No paid billing history.</p> {% endif %}
+
+    <div class="footer">
+         This summary is generated based on available electronic records. Please verify details if needed for official claims.<br>
+         SRM Group of Institutions, Tiruchirappalli
+    </div>
+</body>
+</html>

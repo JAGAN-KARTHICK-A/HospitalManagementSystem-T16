@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg">
+    <div class="p-6 border-b border-gray-200">
+         <h2 class="text-xl font-bold text-gray-800">
+            Complete Consultation Log ({{ history|length }})
+         </h2>
+         <p class="text-sm text-gray-600">This page shows all finalized consultation records.</p>
+    </div>
+    
+    <div class="overflow-x-auto">
+        {% if history %}
+<table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+        <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient & Date</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doctor & Assessment</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prescriptions</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lab Orders</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+        {% for consult in history %}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ consult.patient.patient_name }}</div>
+                    <div class="text-sm text-gray-600">{{ consult.patient.pid }}</div>
+                    <div class="text-sm text-gray-500">{{ consult.consultation_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-gray-900">{{ consult.doctor_name }}</div>
+                    <div class="text-sm text-gray-700 truncate" style="max-width: 250px;">{{ consult.notes.assessment }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <ul class="text-sm text-gray-700 list-disc list-inside">
+                        {% for rx in consult.prescriptions %}
+                            <li>{{ rx.name }}</li>
+                        {% else %}
+                            <li class="text-gray-400">None</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <ul class="text-sm text-gray-700 list-disc list-inside">
+                        {% for lab in consult.investigation_orders %}
+                            <li>{{ lab.name }}</li>
+                        {% else %}
+                            <li class="text-gray-400">None</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <a href="{{ url_for('main.consultation_room', triage_id=consult.triage_id) }}" class="text-sky-600 hover:text-sky-900">View Details</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+        {% else %}
+            <p class="p-6 text-gray-500">No consultations have been completed yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

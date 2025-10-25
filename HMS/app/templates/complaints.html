@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-1 space-y-6">
+
+        <div class="bg-white shadow-lg rounded-lg border-l-4 border-sky-500 p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Find Patient to Log Complaint</h2>
+            <form method="GET" action="{{ url_for('main.complaint_portal') }}" class="flex space-x-2">
+                <input type="text" id="search_query" name="search_query" 
+                       placeholder="Search by PID or Name..."
+                       value="{{ request.args.get('search_query', '') }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                       required>
+                <button type="submit" 
+                        class="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-700 transition duration-300">
+                    Search
+                </button>
+            </form>
+
+            {% if patients %}
+            <div class="mt-4 border-t border-gray-200 pt-4 max-h-48 overflow-y-auto">
+                <h3 class="text-sm font-medium text-gray-500 mb-2">Search Results:</h3>
+                <ul class="divide-y divide-gray-100">
+                    {% for p in patients %}
+                    <li class="flex justify-between items-center py-2">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ p.patient_name }}</p>
+                            <p class="text-sm text-gray-500">{{ p.pid }}</p>
+                        </div>
+                        <a href="{{ url_for('main.complaint_portal', select_patient_id=p._id) }}"
+                           class="text-sm font-medium text-sky-600 hover:text-sky-800">
+                            Select
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="bg-white shadow-lg rounded-lg">
+            <form method="POST" action="{{ url_for('main.complaint_portal') }}" class="p-6 space-y-4" enctype="multipart/form-data">
+                <h2 class="text-xl font-bold text-gray-800">Log New Complaint</h2>
+                
+                {% if selected_patient %}
+                <div class="p-4 bg-gray-100 rounded-lg">
+                    <h3 class="text-sm font-medium text-gray-900">Selected Patient:</h3>
+                    <p class="text-lg font-bold text-sky-700">{{ selected_patient.patient_name }}</p>
+                    <p class="text-sm text-gray-600">{{ selected_patient.pid }} | {{ selected_patient.patient_contact }}</p>
+                    
+                    <input type="hidden" name="patient_id" value="{{ selected_patient._id }}">
+                    <input type="hidden" name="patient_name" value="{{ selected_patient.patient_name }}">
+                    <input type="hidden" name="patient_contact" value="{{ selected_patient.patient_contact }}">
+                </div>
+
+                <div>
+                    <label for="channel_source" class="block text-sm font-medium text-gray-700 mb-1">Channel Source</label>
+                    <select id="channel_source" name="channel_source" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                            required>
+                        <option value="Web Portal" selected>Web Portal</option>
+                        <option value="In-Person">In-Person</option>
+                        <option value="Email">Email</option>
+                        <option value="Phone Call">Phone Call</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="complaint_text" class="block text-sm font-medium text-gray-700 mb-1">Complaint Details</label>
+                    <textarea id="complaint_text" name="complaint_text" rows="4"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                              placeholder="Enter the patient's complaint..."
+                              required></textarea>
+                </div>
+
+                <div>
+                    <label for="attachment" class="block text-sm font-medium text-gray-700 mb-1">Attachment (Optional)</label>
+                    <input type="file" id="attachment" name="attachment" 
+                           class="w-full text-sm text-gray-500
+                                  file:mr-4 file:py-2 file:px-4
+                                  file:rounded-full file:border-0
+                                  file:text-sm file:font-semibold
+                                  file:bg-sky-50 file:text-sky-700
+                                  hover:file:bg-sky-100">
+                </div>
+
+                <div>
+                    <button type="submit" 
+                            class="w-full bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-700 transition duration-300">
+                        Log Complaint
+                    </button>
+                </div>
+
+                {% else %}
+                <div class="p-4 bg-gray-100 rounded-lg text-center">
+                    <p class="text-gray-600 font-medium">
+                        <ion-icon name="search-outline" class="text-xl inline-block align-middle mr-1"></ion-icon>
+                        Please search for and select a patient above to log a complaint.
+                    </p>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="lg:col-span-2 bg-white shadow-md rounded-lg">
+        <div class="p-6 border-b border-gray-200">
+             <h2 class="text-xl font-bold text-gray-800">
+                Complaint Tickets ({{ complaints|length }})
+             </h2>
+        </div>
+        
+        <div class="overflow-x-auto">
+            {% if complaints %}
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for t in complaints %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ t.patient_name }}</div>
+                                    <div class="text-sm text-gray-500">{{ t.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ t.category }}</div>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if t.urgency == 'High' %} bg-red-100 text-red-800 
+                                        {% elif t.urgency == 'Medium' %} bg-yellow-100 text-yellow-800
+                                        {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                                        {{ t.urgency }} Urgency
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if t.status == 'New' %} bg-blue-100 text-blue-800 
+                                        {% elif t.status == 'In Progress' %} bg-yellow-100 text-yellow-800
+                                        {% elif t.status == 'Resolved' %} bg-green-100 text-green-800
+                                        {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                                        {{ t.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                    {{ t.assigned_to or 'Unassigned' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ url_for('main.complaint_detail', complaint_id=t._id) }}" class="text-sky-600 hover:text-sky-900">View/Resolve</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="p-6 text-gray-500">No complaints have been logged yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

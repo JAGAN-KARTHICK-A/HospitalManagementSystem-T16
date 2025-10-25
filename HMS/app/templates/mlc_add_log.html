@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white shadow-lg rounded-lg border-l-4 border-blue-500">
+    <form id="add-log-form" class="p-8 space-y-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Add Medico-Legal Case Log (Blockchain)</h2>
+
+        <div>
+            <label for="caseId" class="block text-sm font-medium text-gray-700 mb-1">Case ID *</label>
+            <input type="text" id="caseId" name="caseId"
+                   placeholder="e.g., MLC2025-001"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   required>
+        </div>
+
+        <div>
+            <label for="details" class="block text-sm font-medium text-gray-700 mb-1">Log Details *</label>
+            <textarea id="details" name="details" rows="4"
+                      placeholder="Describe the event (e.g., 'Initial examination photos uploaded by Dr. A', 'Police statement received')..."
+                      class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required></textarea>
+        </div>
+
+        <div>
+            <button type="submit"
+                    id="submit-button"
+                    class="w-full bg-blue-600 text-white font-bold py-2.5 px-4 rounded-md shadow-md hover:bg-blue-700 transition duration-300 flex items-center justify-center space-x-2 disabled:opacity-50">
+                    <ion-icon name="cloud-upload-outline" class="text-xl"></ion-icon>
+                    <span>Add Log Entry to Blockchain</span>
+            </button>
+        </div>
+
+         <!-- Feedback Area -->
+         <div id="feedback-message" class="mt-4 text-sm"></div>
+
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const form = document.getElementById('add-log-form');
+    const submitButton = document.getElementById('submit-button');
+    const feedbackMessage = document.getElementById('feedback-message');
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Prevent default form submission
+        feedbackMessage.textContent = ''; // Clear previous messages
+        feedbackMessage.className = 'mt-4 text-sm'; // Reset classes
+        submitButton.disabled = true;
+        submitButton.querySelector('span').textContent = 'Submitting to Blockchain...';
+
+        const caseId = document.getElementById('caseId').value.trim();
+        const details = document.getElementById('details').value.trim();
+
+        if (!caseId || !details) {
+            feedbackMessage.textContent = 'Error: Case ID and Details are required.';
+            feedbackMessage.classList.add('text-red-600', 'font-medium');
+            submitButton.disabled = false;
+            submitButton.querySelector('span').textContent = 'Add Log Entry to Blockchain';
+            return;
+        }
+
+        try {
+            // NOTE: The API endpoint is under /patient based on your route definition
+            const response = await fetch("{{ url_for('patient_portal.add_log_entry') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add authentication headers if needed (e.g., JWT token)
+                    // 'Authorization': `Bearer ${your_token}`
+                },
+                body: JSON.stringify({ caseId: caseId, details: details }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                feedbackMessage.innerHTML = `
+                    <p class="text-green-700 font-medium">Success! Log added.</p>
+                    <p class="text-xs text-gray-600 mt-1">Tx Hash: ${result.transaction_hash}</p>
+                    <p class="text-xs text-gray-600">Block: ${result.block_number}</p>
+                `;
+                form.reset(); // Clear the form on success
+            } else {
+                throw new Error(result.message || `HTTP error ${response.status}`);
+            }
+
+        } catch (error) {
+            console.error('Error adding log:', error);
+            feedbackMessage.textContent = `Error: ${error.message}`;
+            feedbackMessage.classList.add('text-red-600', 'font-medium');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.querySelector('span').textContent = 'Add Log Entry to Blockchain';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Welcome Header -->
+    <div class="bg-white shadow-lg rounded-lg p-6 border-l-4 border-sky-500">
+        <h2 class="text-3xl font-bold text-gray-800">Welcome, {{ current_user.username }}!</h2>
+        <p class="text-gray-600 mt-1">
+            You are logged in as a <strong>{{ current_user.role.replace('_', ' ')|title }}</strong>.
+            {% if current_user.module != 'ALL' %}
+                Your access is configured for the <strong>{{ current_user.module.replace('_', ' ')|title }}</strong> module.
+            {% else %}
+                You have <strong>Super Admin</strong> access to all modules.
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <div class="bg-white shadow-md rounded-lg p-5 flex items-center space-x-4">
+            <div class="bg-blue-100 text-blue-600 p-3 rounded-full">
+                <ion-icon name="people-outline" class="text-2xl"></ion-icon>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Total Patients</p>
+                <p class="text-2xl font-bold text-gray-800">{{ stats.total_patients }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-5 flex items-center space-x-4">
+            <div class="bg-green-100 text-green-600 p-3 rounded-full">
+                <ion-icon name="calendar-outline" class="text-2xl"></ion-icon>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Appointments Today</p>
+                <p class="text-2xl font-bold text-gray-800">{{ stats.appointments_today }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-5 flex items-center space-x-4">
+            <div class="bg-yellow-100 text-yellow-600 p-3 rounded-full">
+                <ion-icon name="bed-outline" class="text-2xl"></ion-icon>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Beds Available*</p>
+                <p class="text-2xl font-bold text-gray-800">{{ stats.available_beds }} / {{ stats.total_beds }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-5 flex items-center space-x-4">
+            <div class="bg-red-100 text-red-600 p-3 rounded-full">
+                <ion-icon name="alert-circle-outline" class="text-2xl"></ion-icon>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Pending ER Cases*</p>
+                <p class="text-2xl font-bold text-gray-800">{{ stats.pending_er }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-sm text-gray-500 mt-2">
+        * Beds & ER stats require implementation of Bed Management and ER Case Management modules.
+    </div>
+    <!-- Placeholder for module-specific content -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Module Dashboard</h3>
+        <p class="text-gray-600">
+            This is the main dashboard. When you navigate to a specific module like "Digital Registration" or "ER Case Management",
+            this content area will be replaced with the specific tools and data for that module.
+        </p>
+        <p class="text-gray-600 mt-2">
+            You can now start building out the routes in `app/routes.py`, creating new database models in `app/models.py`,
+            and adding new HTML templates in the `app/templates/` folder for each of the 54 sub-modules.
+        </p>
+    </div>
+
+</div>
+{% endblock %}

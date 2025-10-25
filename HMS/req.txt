@@ -1,0 +1,7 @@
+Flask
+pymongo
+flask-login
+werkzeug
+python-dotenv
+flask-bcrypt
+click

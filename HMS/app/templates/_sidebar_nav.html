@@ -1,0 +1,251 @@
+<!-- 
+This is a partial template for the sidebar navigation.
+It dynamically shows links based on the user's role and module.
+-->
+
+{% set current_route = request.path %}
+
+<ul class="space-y-1">
+    <li>
+        <a href="{{ url_for('main.dashboard') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if current_route == url_for('main.dashboard') %} active {% endif %}">
+            <ion-icon name="grid-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Dashboard</span>
+        </a>
+    </li>
+
+    <!-- 
+    ======================================
+    ADMINISTRATION LINKS
+    ======================================
+    -->
+    {% if current_user.role in ['SUPER_ADMIN', 'MODULE_ADMIN'] %}
+    <li class="pt-2">
+        <div class="sidebar-header">Administration</div>
+        <a href="{{ url_for('main.manage_users') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if current_route == url_for('main.manage_users') %} active {% endif %}">
+            <ion-icon name="people-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Manage Users</span>
+        </a>
+    </li>
+    {% endif %}
+
+    <!-- 
+    ======================================
+    CLINICAL MODULES
+    ======================================
+    -->
+    {% if current_user.module in ['CLINICAL', 'ALL'] %}
+    <li class="pt-2">
+        <div class="sidebar-header">Clinical Modules</div>
+
+        <!-- NEW LINK FOR ADMINS -->
+        {% if current_user.role in ['SUPER_ADMIN', 'MODULE_ADMIN'] %}
+        <a href="{{ url_for('main.manage_doctors') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path.startswith('/manage-doctors') %} active {% endif %}">
+            <ion-icon name="medkit-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Manage Doctors</span>
+        </a>
+        {% endif %}
+        <!-- END NEW LINK -->
+
+        <!-- Link to Problem 1 (This is the route we updated) -->
+        <a href="{{ url_for('main.digital_registration') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if current_route == url_for('main.digital_registration') %} active {% endif %}">
+            <ion-icon name="person-add-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Registration & Queue</span>
+        </a>
+
+        <a href="{{ url_for('main.complaint_portal') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path.startswith('/complaint') %} active {% endif %}">
+            <ion-icon name="chatbox-ellipses-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Complaint Portal</span>
+        </a>
+
+        <a href="{{ url_for('main.vitals_logging') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path.startswith('/vitals-logging') %} active {% endif %}">
+            <ion-icon name="pulse-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Vitals Logging</span>
+        </a>
+
+        <a href="{{ url_for('main.patient_list') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.patient_list') %} active {% endif %}">
+            <ion-icon name="list-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Patient List</span>
+        </a>
+
+        <a href="{{ url_for('main.triage_dashboard') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path.startswith('/triage-dashboard') %} active {% endif %}">
+            <ion-icon name="stopwatch-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Triage Dashboard</span>
+        </a>
+        <a href="{{ url_for('main.triage_log') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.triage_log') %} active {% endif %}">
+            <ion-icon name="archive-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Triage Log</span>
+        </a>
+        <a href="{{ url_for('main.consultation_log') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.consultation_log') %} active {% endif %}">
+            <ion-icon name="document-text-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Consultation Log</span>
+        </a>
+        {% if current_user.role in ['SUPER_ADMIN', 'MODULE_ADMIN'] %}
+        <a href="{{ url_for('main.manage_formulary') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.manage_formulary') %} active {% endif %}">
+            <ion-icon name="list-circle-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Manage Formulary</span>
+        </a>
+        <a href="{{ url_for('main.manage_lab_tests') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.manage_lab_tests') %} active {% endif %}">
+            <ion-icon name="flask-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Manage Lab Tests</span>
+        </a>
+        {% endif %}
+        <a href="{{ url_for('main.pharmacy_dashboard') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path.startswith('/pharmacy') %} active {% endif %}">
+            <ion-icon name="medkit-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Pharmacy (PIS)</span>
+        </a>
+        <a href="{{ url_for('main.billing_log') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.billing_log') %} active {% endif %}">
+            <ion-icon name="cash-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Billing Log</span>
+        </a>
+        <a href="{{ url_for('main.lab_sample_collection') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.lab_sample_collection') %} active {% endif %}">
+            <ion-icon name="eyedrop-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Sample Collection</span>
+        </a>
+        <a href="{{ url_for('main.lab_workbench') }}" 
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.lab_workbench') %} active {% endif %}">
+            <ion-icon name="flask-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Lab Workbench (LIS)</span>
+        </a>
+        <a href="{{ url_for('main.patient_billing') }}"
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.patient_billing') %} active {% endif %}">
+            <ion-icon name="receipt-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Patient Billing</span>
+        </a>
+        <!-- ... (rest of your clinical links) ... -->
+
+        <!--
+    ======================================
+    EMERGENCY & LEGAL MODULES
+    ======================================
+    -->
+
+    <!-- ... (Support & Facility Modules section <li>) ... -->
+    </li>
+    {% endif %}
+
+
+    <!-- 
+    ======================================
+    EMERGENCY & LEGAL MODULES
+    ======================================
+    -->
+    {% if current_user.module in ['EMERGENCY_LEGAL', 'ALL'] %}
+    <li class="pt-2">
+        <div class="sidebar-header">Emergency & Legal</div>
+        <a href="{{ url_for('main.er_dashboard') }}" {# Use main blueprint now #}
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path.startswith('/er-') %} active {% endif %}"> {# Update active check #}
+            <ion-icon name="pulse" class="mr-3 text-xl text-red-400"></ion-icon>
+            <span class="text-sm font-medium">ER Dashboard</span>
+        </a>
+        {# --- NEW MLC BLOCKCHAIN LINKS --- #}
+        <a href="{{ url_for('main.mlc_add_log_page') }}"
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.mlc_add_log_page') %} active {% endif %}">
+            <ion-icon name="cloud-upload-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Add MLC Log (Blockchain)</span>
+        </a>
+        <a href="{{ url_for('main.mlc_view_log_page') }}"
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.mlc_view_log_page') %} active {% endif %}">
+            <ion-icon name="search-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">View MLC Log (Blockchain)</span>
+        </a>
+         {% if current_user.role in ['SUPER_ADMIN', 'MODULE_ADMIN'] %} {# Restrict 'View All' #}
+         <a href="{{ url_for('main.mlc_view_all_logs_page') }}"
+           class="flex items-center py-2.5 px-4 rounded-md sidebar-link
+                  {% if request.path == url_for('main.mlc_view_all_logs_page') %} active {% endif %}">
+            <ion-icon name="list-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">View All MLC Logs (Admin)</span>
+        </a>
+        {% endif %}
+        {# --- END NEW LINKS --- #}
+    </li>
+    {% endif %}
+
+    <!-- 
+    ======================================
+    SUPPORT & FACILITY MODULES
+    ======================================
+    -->
+    {% if current_user.module in ['SUPPORT_FACILITY', 'ALL'] %}
+    <li class="pt-2">
+        <div class="sidebar-header">Support & Facility</div>
+        <!-- Link to Problem 17 -->
+        <a href="#" class="flex items-center py-2.5 px-4 rounded-md sidebar-link">
+            <ion-icon name="restaurant-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Diet & Nutrition</span>
+        </a>
+        <!-- Link to Problem 22 -->
+        <a href="#" class="flex items-center py-2.5 px-4 rounded-md sidebar-link">
+            <ion-icon name="calendar-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">OT Scheduling</span>
+        </a>
+        <!-- Link to Problem 24 -->
+        <a href="#" class="flex items-center py-2.5 px-4 rounded-md sidebar-link">
+            <ion-icon name="bed-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Ward Management</span>
+        </a>
+        <!-- ... Add links for all other Support/Facility modules ... -->
+    </li>
+    {% endif %}
+
+    <!-- 
+    ======================================
+    ENGINEERING & INFRASTRUCTURE
+    ======================================
+    -->
+    {% if current_user.module in ['ENGINEERING_INFRA', 'ALL'] %}
+    <li class="pt-2">
+        <div class="sidebar-header">Engineering & Infra</div>
+        <!-- Link to Problem 27 -->
+        <a href="#" class="flex items-center py-2.5 px-4 rounded-md sidebar-link">
+            <ion-icon name="construct-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Biomedical Equipment</span>
+        </a>
+        <!-- Link to Problem 36 -->
+        <a href="#" class="flex items-center py-2.5 px-4 rounded-md sidebar-link">
+            <ion-icon name="trash-bin-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">Waste Management</span>
+        </a>
+        <!-- Link to Problem 38 -->
+        <a href="#" class="flex items-center py-2.5 px-4 rounded-md sidebar-link">
+            <ion-icon name="laptop-outline" class="mr-3 text-xl"></ion-icon>
+            <span class="text-sm font-medium">IT Management</span>
+        </a>
+        <!-- ... Add links for all other Engineering/Infra modules ... -->
+    </li>
+    {% endif %}
+</ul>

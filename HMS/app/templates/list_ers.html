@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Emergency Cases</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f7fa;
+        }
+        h1 {
+            text-align: center;
+            color: #d9534f;
+        }
+        table {
+            width: 80%;
+            margin: 30px auto;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        th {
+            background-color: #d9534f;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .level-critical {
+            color: white;
+            background-color: #c9302c;
+        }
+        .level-high {
+            color: white;
+            background-color: #f0ad4e;
+        }
+        .level-moderate {
+            background-color: #fcf8e3;
+        }
+        .level-low {
+            background-color: #dff0d8;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hospital Emergency Cases</h1>
+
+    {% if cases %}
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Severity Level</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for case in cases %}
+                <tr class="level-{{ case.level | lower }}">
+                    <td>{{ loop.index }}</td>
+                    <td>{{ case.location }}</td>
+                    <td>{{ case.content }}</td>
+                    <td>{{ case.level }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="text-align:center; color:#777;">No emergency cases reported.</p>
+    {% endif %}
+</body>
+</html>

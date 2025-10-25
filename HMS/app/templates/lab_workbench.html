@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg">
+    <div class="p-6 border-b border-gray-200">
+         <h2 class="text-xl font-bold text-gray-800">
+            Lab Workbench ({{ queue|length }} Samples Pending)
+         </h2>
+    </div>
+    
+    <div class="overflow-x-auto">
+        {% if queue %}
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Test</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Collected By</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Enter Result</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for order in queue %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ order.patient.patient_name }}</div>
+                                <div class="text-sm text-gray-600">{{ order.patient.pid }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">{{ order.investigation_orders.name }}</div>
+                                <div class="text-sm text-gray-500">{{ order.investigation_orders.notes or 'No notes' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-700">{{ order.investigation_orders.get('collected_by', 'N/A') }}</div>
+                                <div class="text-sm text-gray-500">{{ order.investigation_orders.get('collected_at', '').strftime('%Y-%m-%d %H:%M') }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <form method="POST" action="{{ url_for('main.lab_workbench') }}" class="flex space-x-2">
+                                    <input type="hidden" name="consultation_id" value="{{ order._id }}">
+                                    <input type="hidden" name="order_id" value="{{ order.investigation_orders._id }}">
+                                    <input type="text" name="result_text" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter result..." required>
+                                    <button type="submit" class="bg-blue-600 text-white font-medium py-2 px-3 rounded-md hover:bg-blue-700">
+                                        Verify
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="p-6 text-gray-500">No samples pending verification.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if not read_only %}
+<form method="POST" action="{{ url_for('main.consultation_room', triage_id=triage_entry._id) }}" id="consultation-form">
+{% else %}
+<div id="consultation-view">
+{% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white shadow-lg rounded-lg border-l-4 border-sky-500">
+                <div class="p-6">
+                    <h2 class="text-xl font-bold text-gray-800">{{ patient.patient_name }}</h2>
+                    <p class="text-sm text-gray-600">{{ patient.pid }} | {{ patient.patient_contact }}</p>
+                    <hr class="my-4">
+                    <h3 class="text-sm font-semibold text-gray-700">Triage Intake ({{ triage_entry.triage_at.strftime('%Y-%m-%d %H:%M') }})</h3>
+                    <p class="text-sm text-gray-600"><strong>Symptoms:</strong> {{ triage_entry.symptoms }}</p>
+                    <p class="text-sm text-gray-600"><strong>History:</strong> {{ triage_entry.medical_history or 'N/A' }}</p>
+                    <div class="mt-2 text-sm text-gray-800">
+                        BP: <strong>{{ triage_entry.vitals.bp_systolic }}/{{ triage_entry.vitals.bp_diastolic }}</strong> | 
+                        HR: <strong>{{ triage_entry.vitals.heart_rate }}</strong> | 
+                        Temp: <strong>{{ triage_entry.vitals.temperature }}°F</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-md rounded-lg">
+                <div class="p-6 border-b">
+                    <h2 class="text-xl font-bold text-gray-800">Consultation History</h2>
+                </div>
+                <div class="p-6 space-y-4 max-h-96 overflow-y-auto">
+                    {% if past_consultations %}
+                        {% for consult in past_consultations %}
+                        <div class="border-b pb-2">
+                            <p class="text-sm font-semibold text-gray-800">{{ consult.consultation_at.strftime('%Y-%m-%d') }} - {{ consult.doctor_name }}</p>
+                            <p class="text-sm text-gray-600"><strong>Assessment:</strong> {{ consult.notes.assessment if consult.notes is mapping else consult.notes }}</p>
+                            <a href="{{ url_for('main.consultation_room', triage_id=consult.triage_id) }}" class="text-xs text-sky-600 hover:underline">View Full Note</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-sm text-gray-500">No past consultations on record.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-1 bg-white shadow-lg rounded-lg">
+            <div class="p-6 space-y-4">
+                <h2 class="text-xl font-bold text-gray-800">Consultation Notes (SOAP)</h2>
+                <div>
+                    <label for="notes_subjective" class="block text-sm font-medium text-gray-700">Subjective</label>
+                    <textarea id="notes_subjective" name="notes_subjective" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm {% if read_only %}bg-gray-100{% endif %}" placeholder="Patient's reported symptoms..." {{ 'disabled' if read_only }}>{{ consultation.notes.get('subjective', '') if consultation and consultation.notes is mapping }}</textarea>
+                </div>
+                <div>
+                    <label for="notes_objective" class="block text-sm font-medium text-gray-700">Objective</label>
+                    <textarea id="notes_objective" name="notes_objective" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm {% if read_only %}bg-gray-100{% endif %}" placeholder="Doctor's findings, vital signs..." {{ 'disabled' if read_only }}>{{ consultation.notes.get('objective', '') if consultation and consultation.notes is mapping }}</textarea>
+                </div>
+                <div>
+                    <label for="notes_assessment" class="block text-sm font-medium text-gray-700">Assessment</label>
+                    <textarea id="notes_assessment" name="notes_assessment" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm {% if read_only %}bg-gray-100{% endif %}" placeholder="Diagnosis..." {{ 'required' if not read_only }} {{ 'disabled' if read_only }}>{{ consultation.notes.get('assessment', '') if consultation and consultation.notes is mapping }}</textarea>
+                </div>
+                <div>
+                    <label for="notes_plan" class="block text-sm font-medium text-gray-700">Plan</label>
+                    <textarea id="notes_plan" name="notes_plan" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm {% if read_only %}bg-gray-100{% endif %}" placeholder="Treatment plan, follow-up..." {{ 'disabled' if read_only }}>{{ consultation.notes.get('plan', '') if consultation and consultation.notes is mapping }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white shadow-lg rounded-lg">
+                <div class="p-6">
+                    <h2 class="text-xl font-bold text-gray-800">E-Prescription</h2>
+                    <div id="drug-interaction-alert" class="hidden mt-2 p-3 rounded-md bg-red-100 text-red-800"></div>
+                    
+                    <div id="prescription-list" class="space-y-2 mt-4">
+                        {% if read_only and consultation.prescriptions %}
+                            {% for rx in consultation.prescriptions %}
+                            <div class="flex items-center justify-between p-2 bg-gray-100 rounded-md">
+                                <div>
+                                    <p class="text-sm font-medium">{{ rx.name }} ({{ rx.dosage }})</p>
+                                    <p class="text-xs text-gray-600">{{ rx.instructions }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% elif read_only %}
+                             <p class="text-sm text-gray-500">No medications prescribed.</p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if not read_only %}
+                    <div class="mt-4 p-3 bg-gray-50 rounded-md border">
+                        <label for="med-search" class="block text-sm font-medium text-gray-700">Add Medication</label>
+                        <input list="formulary-list" id="med-search" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Type to search formulary...">
+                        <datalist id="formulary-list">
+                            {% for drug in formulary %}
+                                <option value="{{ drug.drug_name|title }} ({{ drug.brand_name }})" data-dosage="{{ drug.dosage_form }}">
+                            {% endfor %}
+                        </datalist>
+                        <input type="text" id="med-instructions" class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., 1 tablet twice daily for 7 days">
+                        <button type="button" id="add-med-btn" class="w-full mt-2 bg-sky-600 text-white text-sm font-medium py-2 px-4 rounded-md">Add to Prescription</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bg-white shadow-lg rounded-lg">
+                <div class="p-6">
+                    <h2 class="text-xl font-bold text-gray-800">Investigation Orders</h2>
+                    <div id="lab-list" class="space-y-2 mt-4">
+                        {% if read_only and consultation.investigation_orders %}
+                            {% for lab in consultation.investigation_orders %}
+                            <div class="flex items-center justify-between p-2 bg-gray-100 rounded-md">
+                                <div>
+                                    <p class="text-sm font-medium">{{ lab.name }}</p>
+                                    <p class="text-xs text-gray-600">{{ lab.notes or 'No notes' }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% elif read_only %}
+                             <p class="text-sm text-gray-500">No lab tests ordered.</p>
+                        {% endif %}
+                    </div>
+                    {% if not read_only %}
+                    <div class="mt-4 p-3 bg-gray-50 rounded-md border">
+                        <label for="lab-search" class="block text-sm font-medium text-gray-700">Add Test</label>
+                        <input list="lab-test-list" id="lab-search" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Type to search lab tests...">
+                        <datalist id="lab-test-list">
+                            {% for test in lab_tests %}
+                                <option value="{{ test.test_name|title }} ({{ test.department }})">
+                            {% endfor %}
+                        </datalist>
+                        <input type="text" id="lab-notes" class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md" placeholder="Notes (e.g., STAT, fasting)">
+                        <button type="button" id="add-lab-btn" class="w-full mt-2 bg-sky-600 text-white text-sm font-medium py-2 px-4 rounded-md">Add to Orders</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if not read_only %}
+            <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-md shadow-lg hover:bg-green-700 text-lg">
+                Finalize & Complete Consultation
+            </button>
+            {% else %}
+            <div class="w-full bg-gray-500 text-white font-bold py-3 px-4 rounded-md text-lg text-center">
+                Consultation Completed
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+{% if not read_only %}
+</form>
+{% else %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if not read_only %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const medicationStore = new Map();
+    const labStore = new Map();
+
+    // --- Prescription Logic ---
+    const medSearch = document.getElementById('med-search');
+    const medInstructions = document.getElementById('med-instructions');
+    const addMedBtn = document.getElementById('add-med-btn');
+    const prescriptionList = document.getElementById('prescription-list');
+    const interactionAlert = document.getElementById('drug-interaction-alert');
+    const datalistOptions = document.getElementById('formulary-list').options;
+
+    addMedBtn.addEventListener('click', () => {
+        const medName = medSearch.value.split('(')[0].trim();
+        const instructions = medInstructions.value;
+        
+        let dosage = '';
+        // Find dosage from datalist
+        for (let opt of datalistOptions) {
+            if (opt.value === medSearch.value) {
+                dosage = opt.dataset.dosage || '';
+                break;
+            }
+        }
+
+        if (!medName || !instructions || !dosage) {
+            alert('Please select a valid drug from the list and enter instructions.');
+            return;
+        }
+
+        const medId = 'med-' + medicationStore.size;
+        medicationStore.set(medId, { name: medName, dosage: dosage, instructions: instructions });
+        renderMedicationList();
+        
+        medSearch.value = '';
+        medInstructions.value = '';
+        checkInteractions();
+    });
+
+    function renderMedicationList() {
+        prescriptionList.innerHTML = '';
+        for (let [id, med] of medicationStore) {
+            prescriptionList.innerHTML += `
+                <div class="flex items-center justify-between p-2 bg-gray-100 rounded-md" id="${id}">
+                    <div>
+                        <p class="text-sm font-medium">${med.name} (${med.dosage})</p>
+                        <p class="text-xs text-gray-600">${med.instructions}</p>
+                        <input type="hidden" name="med_name[]" value="${med.name}">
+                        <input type="hidden" name="med_dosage[]" value="${med.dosage}">
+                        <input type="hidden" name="med_instructions[]" value="${med.instructions}">
+                    </div>
+                    <button type="button" class="text-red-500 remove-med-btn" data-id="${id}">
+                        <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    prescriptionList.addEventListener('click', (e) => {
+        if (e.target.closest('.remove-med-btn')) {
+            const btn = e.target.closest('.remove-med-btn');
+            medicationStore.delete(btn.dataset.id);
+            renderMedicationList();
+            checkInteractions();
+        }
+    });
+
+    async function checkInteractions() {
+        const medNames = Array.from(medicationStore.values()).map(m => m.name.toLowerCase());
+        if (medNames.length < 2) {
+            interactionAlert.classList.add('hidden');
+            return;
+        }
+
+        const response = await fetch("{{ url_for('main.api_check_interactions') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ medications: medNames })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.alerts && result.alerts.length > 0) {
+                interactionAlert.innerHTML = `<strong>AI Alert:</strong> ${result.alerts.join(' ')}`;
+                interactionAlert.classList.remove('hidden');
+                interactionAlert.classList.toggle('bg-red-100', result.severe);
+                interactionAlert.classList.toggle('text-red-800', result.severe);
+                interactionAlert.classList.toggle('bg-yellow-100', !result.severe);
+                interactionAlert.classList.toggle('text-yellow-800', !result.severe);
+            } else {
+                interactionAlert.classList.add('hidden');
+            }
+        }
+    }
+
+    // --- Lab Test Logic ---
+    const labSearch = document.getElementById('lab-search');
+    const labNotes = document.getElementById('lab-notes');
+    const addLabBtn = document.getElementById('add-lab-btn');
+    const labList = document.getElementById('lab-list');
+
+    addLabBtn.addEventListener('click', () => {
+        const testName = labSearch.value.split('(')[0].trim();
+        const notes = labNotes.value;
+
+        if (!testName) {
+            alert('Please select a valid lab test from the list.');
+            return;
+        }
+
+        const labId = 'lab-' + labStore.size;
+        labStore.set(labId, { name: testName, notes: notes });
+        renderLabList();
+        
+        labSearch.value = '';
+        labNotes.value = '';
+    });
+
+    function renderLabList() {
+        labList.innerHTML = '';
+        for (let [id, lab] of labStore) {
+            labList.innerHTML += `
+                <div class="flex items-center justify-between p-2 bg-gray-100 rounded-md" id="${id}">
+                    <div>
+                        <p class="text-sm font-medium">${lab.name}</p>
+                        <p class="text-xs text-gray-600">${lab.notes || 'No notes'}</p>
+                        <input type="hidden" name="test_name[]" value="${lab.name}">
+                        <input type="hidden" name="test_notes[]" value="${lab.notes}">
+                    </div>
+                    <button type="button" class="text-red-500 remove-lab-btn" data-id="${id}">
+                        <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    labList.addEventListener('click', (e) => {
+        if (e.target.closest('.remove-lab-btn')) {
+            const btn = e.target.closest('.remove-lab-btn');
+            labStore.delete(btn.dataset.id);
+            renderLabList();
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

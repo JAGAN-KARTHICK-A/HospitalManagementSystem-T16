@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto bg-white shadow-md rounded-lg">
+    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="text-xl font-bold text-gray-800">All Medico-Legal Blockchain Logs (<span id="log-count">...</span>)</h2>
+        <button id="refresh-button" class="bg-blue-500 text-white text-sm font-medium py-1 px-3 rounded hover:bg-blue-600 disabled:opacity-50">
+            <ion-icon name="refresh-outline" class="inline-block align-middle"></ion-icon> Refresh
+        </button>
+    </div>
+
+    <!-- Feedback Area -->
+    <div id="feedback" class="p-4 text-sm"></div>
+
+    <!-- Results Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case ID</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Logged By</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Log ID</th>
+                </tr>
+            </thead>
+            <tbody id="all-logs-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Log entries will be inserted here -->
+                 <tr id="loading-row">
+                     <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                         Loading all logs from blockchain...
+                     </td>
+                 </tr>
+            </tbody>
+        </table>
+        <p id="no-all-logs-message" class="hidden p-6 text-gray-500">No logs found on the blockchain.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const feedbackDiv = document.getElementById('feedback');
+    const logsTbody = document.getElementById('all-logs-tbody');
+    const noLogsMessage = document.getElementById('no-all-logs-message');
+    const loadingRow = document.getElementById('loading-row');
+    const logCountSpan = document.getElementById('log-count');
+    const refreshButton = document.getElementById('refresh-button');
+
+    async function fetchAllLogs() {
+        feedbackDiv.textContent = 'Fetching all logs from blockchain...';
+        feedbackDiv.className = 'p-4 text-sm text-blue-600';
+        logsTbody.innerHTML = ''; // Clear previous results
+        logsTbody.appendChild(loadingRow); // Show loading row
+        noLogsMessage.classList.add('hidden');
+        refreshButton.disabled = true;
+        logCountSpan.textContent = '...';
+
+        try {
+            // NOTE: Using patient_portal endpoint
+            const response = await fetch("{{ url_for('patient_portal.get_all_log_entries') }}", {
+                method: 'GET',
+                headers: { /* Add auth headers if needed */ }
+            });
+
+            const result = await response.json();
+            loadingRow.remove(); // Remove loading row
+
+            if (response.ok && result.status === 'success') {
+                logCountSpan.textContent = result.log_count;
+                if (result.logs.length > 0) {
+                    feedbackDiv.textContent = `Successfully loaded ${result.logs.length} logs.`;
+                    feedbackDiv.classList.remove('text-blue-600');
+                    feedbackDiv.classList.add('text-green-700');
+
+                    // Sort logs by timestamp descending before displaying (optional, client-side sort)
+                    result.logs.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+
+
+                    result.logs.forEach(log => {
+                        const row = logsTbody.insertRow();
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${log.timestamp}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${log.caseId}</td>
+                            <td class="px-6 py-4 text-sm text-gray-800">${log.eventDetails}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">${log.loggedBy}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.logId}</td>
+                        `;
+                    });
+                } else {
+                    feedbackDiv.textContent = 'No logs found on the blockchain.';
+                    feedbackDiv.classList.remove('text-blue-600', 'text-green-700');
+                    feedbackDiv.classList.add('text-gray-500');
+                    noLogsMessage.classList.remove('hidden');
+                }
+            } else {
+                throw new Error(result.message || `HTTP error ${response.status}`);
+            }
+
+        } catch (error) {
+            console.error('Error fetching all logs:', error);
+            loadingRow.remove();
+            feedbackDiv.textContent = `Error: ${error.message}`;
+            feedbackDiv.classList.remove('text-blue-600', 'text-green-700');
+            feedbackDiv.classList.add('text-red-600', 'font-medium');
+        } finally {
+            refreshButton.disabled = false;
+        }
+    }
+
+    refreshButton.addEventListener('click', fetchAllLogs);
+
+    // Fetch logs automatically when the page loads
+    document.addEventListener('DOMContentLoaded', fetchAllLogs);
+
+</script>
+{% endblock %}
