@@ -128,8 +128,13 @@ This project is a modular Hospital Management System built with Python (Flask) a
     * **AI Patient Assistant:** `http://127.0.0.1:5000/patient/`
 
 ---
+# Hospital Management System (HMS) with AI Patient Assistant
+
+---
 
 ## 📁 Project Structure
+
+```text
 /hospital-management-system/
 |
 |-- /app/                     # Main application package
@@ -137,7 +142,7 @@ This project is a modular Hospital Management System built with Python (Flask) a
 |   |   |-- __init__.py       # Defines er_bp blueprint
 |   |
 |   |-- /patient_portal/      # Patient-facing blueprint
-|   |   |-- /templates/       # Patient HTML files (assistant, summary, ai_features)
+|   |   |-- /templates/       # Patient HTML (assistant, summary, ai_features)
 |   |   |-- __init__.py       # Defines patient_bp blueprint
 |   |   |-- routes.py         # Patient chat, summary, blockchain APIs
 |   |
@@ -170,8 +175,8 @@ This project is a modular Hospital Management System built with Python (Flask) a
 |-- requirements.txt          # Python dependencies
 |-- README.md                 # Project README file
 |-- .env                      # Environment variables (SECRET!)
-|-- .gitignore                # Git ignore patterns
----
+|-- .gitignore                # Git ignore patterns```
+---    
 
 ## 🤖 AI Integration
 
