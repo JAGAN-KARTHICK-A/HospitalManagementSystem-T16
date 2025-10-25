@@ -175,7 +175,8 @@ This project is a modular Hospital Management System built with Python (Flask) a
 |-- requirements.txt          # Python dependencies
 |-- README.md                 # Project README file
 |-- .env                      # Environment variables (SECRET!)
-|-- .gitignore                # Git ignore patterns```
+|-- .gitignore                # Git ignore patterns
+```
 ---    
 
 ## 🤖 AI Integration
